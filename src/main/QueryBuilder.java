@@ -7,10 +7,12 @@ import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.Comparator;
 
 
 public class QueryBuilder<T> {
     private List<T> source;
+    private Comparator<T> comparator;
 
     public QueryBuilder(List<T> source) {
         this.source = source;
@@ -29,12 +31,13 @@ public class QueryBuilder<T> {
     public int count(Predicate<T> predicate) {
         int count = 0;
         for (T item : source) {
-            if (!predicate.test(item)) {
+            if (predicate.test(item)) {
                 count++;
             }
         }
         return count;
     }
+
 
     public T first() {
         if (source.isEmpty()) {
@@ -141,4 +144,33 @@ public class QueryBuilder<T> {
         return grouped;
     }
 
-}
+    public <K extends Comparable<K>> QueryBuilder<T> orderBy(Function<T,K> keyExtractor) {
+        comparator = Comparator.comparing(keyExtractor);
+        source.sort(comparator);
+        return this;
+    }
+
+    public <K extends Comparable<K>> QueryBuilder<T> orderByDescending(Function<T,K> keyExtractor){
+        comparator = Comparator.comparing(keyExtractor).reversed();
+        source.sort(comparator);
+        return this;
+    }
+    
+    public <K extends Comparable<K>> QueryBuilder<T> sortBy(Function<T, K> keyExtractor) {
+        comparator = Comparator.comparing(keyExtractor);
+        source.sort(comparator);
+        return this;
+    }
+
+    public <K extends Comparable<K>> QueryBuilder<T> thenBy(Function<T, K> keyExtractor) {
+        comparator = comparator.thenComparing(keyExtractor);
+        source.sort(comparator);
+        return this;
+    }   
+
+    public <K extends Comparable<K>> QueryBuilder<T> thenByDescending(Function<T, K> keyExtractor) {
+        comparator = Comparator.comparing(keyExtractor).reversed();
+        source.sort(comparator);
+        return this;
+    }   
+}   

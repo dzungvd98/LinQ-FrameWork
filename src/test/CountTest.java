@@ -26,7 +26,7 @@ public class CountTest {
     public void countTestUser() {
         List<Person> data = initList();
         QueryBuilder<Person> query = new QueryBuilder<>(data);
-        int result = query.count(p -> p.getAge() >=25);
+        int result = query.count(p -> p.getAge() >= 25);
         assertEquals(3, result);
     } 
 }
