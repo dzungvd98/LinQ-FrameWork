@@ -173,4 +173,14 @@ public class QueryBuilder<T> {
         source.sort(comparator);
         return this;
     }   
+
+    public <R> QueryBuilder<R> ofType(Class<R> type) {
+        List<R> result = new ArrayList<>();
+        for(T item : source) {
+            if(type.isInstance(item)) {
+                result.add(type.cast(item));
+            }
+        }
+        return new QueryBuilder<>(result);
+    }
 }   
