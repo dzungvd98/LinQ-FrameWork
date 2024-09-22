@@ -5,9 +5,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.Comparator;
+import java.util.stream.Collectors;
 
 
 public class QueryBuilder<T> {
@@ -183,4 +185,26 @@ public class QueryBuilder<T> {
         }
         return new QueryBuilder<>(result);
     }
+
+    public <TInner, TKey, TResult> QueryBuilder<TResult> join(
+            List<TInner> inner, // List to join
+            Function<T, TKey> outerKeyExtractor, // Tiêu chí khóa của source
+            Function<TInner, TKey> innerKeyExtractor, // Tiêu chí khóa của inner,
+            BiFunction<T, TInner, TResult> resultSelector // Hàm kết hợp kết quả
+    )  {
+        List<TResult> result = new ArrayList<>();
+        for (T outerItem : source) {
+            TKey outerKey = outerKeyExtractor.apply(outerItem);
+            for(TInner innerItem : inner) {
+                TKey innerKey = innerKeyExtractor.apply(innerItem);
+                if(outerKey.equals(innerKey)) {
+                    TResult combinedResult = resultSelector.apply(outerItem, innerItem);
+                    result.add(combinedResult);
+                }
+            }
+        }
+
+        return new QueryBuilder<>(result);
+    }
+
 }   
