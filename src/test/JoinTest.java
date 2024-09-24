@@ -31,5 +31,39 @@ public class JoinTest {
         assertEquals("John belongs to Math", result.get(0));
     }
 
+    @Test
+    public void leftJoinTest() {
+        List<Student> students = Arrays.asList(
+            new Student("John", 1),
+            new Student("Jane", 2),
+            new Student("Jack", 3) // Không có classroomId tương ứng
+        );
+
+        List<Classroom> classrooms = Arrays.asList(
+            new Classroom(1, "Math"),
+            new Classroom(2, "Science")
+        );
+
+        QueryBuilder<Student> query = new QueryBuilder<>(students);
+
+        // Left Join sinh viên với phòng học
+        List<String> result = query
+            .leftJoin(classrooms,
+                s -> s.getClassroomId(), // Khóa bên trái (classroomId)
+                c -> c.getId(), // Khóa bên phải (id)
+                (student, classroomOpt) -> {
+                    if (classroomOpt.isPresent()) {
+                        return student.getName() + " into " + classroomOpt.get().getName();
+                    } else {
+                        return student.getName() + " has no classroom.";
+                    }
+                }
+            )
+            .toList();
+
+        assertEquals("John into Math", result.get(0));
+
+    }
+
     
 }

@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.Comparator;
-import java.util.stream.Collectors;
 
 
 public class QueryBuilder<T> {
@@ -186,6 +186,7 @@ public class QueryBuilder<T> {
         return new QueryBuilder<>(result);
     }
 
+    // Join
     public <TInner, TKey, TResult> QueryBuilder<TResult> join(
             List<TInner> inner, // List to join
             Function<T, TKey> outerKeyExtractor, // Tiêu chí khóa của source
@@ -204,6 +205,63 @@ public class QueryBuilder<T> {
             }
         }
 
+        return new QueryBuilder<>(result);
+    }
+
+    // right join
+    public <TInner, TKey, TResult> QueryBuilder<TResult> rightJoin(
+                List<TInner> inner,
+                Function<T, TKey> outerKeyExtractor,
+                Function<TInner, TKey> innerKeyExtractor,
+                BiFunction<Optional<T>, TInner, TResult> resultSelector
+
+    ) {
+        List<TResult> result = new  ArrayList<>();
+        
+        for(TInner innerItem : inner) {
+            TKey innerKey = innerKeyExtractor.apply(innerItem);
+            boolean match = false;
+
+            for(T ourterItem : source) {
+                TKey outerKey = outerKeyExtractor.apply(ourterItem);
+                if(outerKey.equals(innerKey)) {
+                    result.add(resultSelector.apply(Optional.of(ourterItem), innerItem));
+                    match = true;
+                }
+            }
+
+            if(!match) {
+                result.add(resultSelector.apply(Optional.empty(), innerItem));
+            }
+        }
+        return new QueryBuilder<>(result);
+    }
+
+    // left join
+    public <TInner, TKey, TResult> QueryBuilder<TResult> leftJoin(
+        List<TInner> inner,
+        Function<T, TKey> outerKeyExtractor,
+        Function<TInner, TKey> innerKeyExtractor,
+        BiFunction<T, Optional<TInner>, TResult> resultSelector
+    ) {
+        List<TResult> result = new ArrayList<>();
+        
+        for(T outerItem : source) {
+            TKey outerKey = outerKeyExtractor.apply(outerItem);
+            boolean matched = false;
+
+            for (TInner innerItem : inner) {
+            TKey innerKey = innerKeyExtractor.apply(innerItem);
+            if (outerKey.equals(innerKey)) {
+                result.add(resultSelector.apply(outerItem, Optional.of(innerItem)));
+                matched = true;
+            }
+        }
+
+            if(!matched) {
+                result.add(resultSelector.apply(outerItem, Optional.empty()));
+            }
+        }
         return new QueryBuilder<>(result);
     }
 
